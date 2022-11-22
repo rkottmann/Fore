@@ -128,6 +128,18 @@ export class AbstractAction extends foreElementMixin(HTMLElement) {
     this.delay = this.hasAttribute('delay') ? Number(this.getAttribute('delay')) : 0;
   }
 
+	_clearOutermostHandler () {
+    if (AbstractAction.outermostHandler === this) {
+      AbstractAction.outermostHandler = null;
+      console.info(
+        `%coutermost Action done`,
+        'background:#e65100; color:white; padding:0.3rem; display:inline-block; white-space: nowrap; border-radius:0.3rem;',
+        this,
+      );
+    }
+
+	}
+
   /**
    * executes the action.
    *
@@ -212,7 +224,8 @@ export class AbstractAction extends foreElementMixin(HTMLElement) {
         await wait(this.delay || 0);
 
         if (!this.ownerDocument.contains(this)) {
-          // We are no longer in the document. Stop working
+			// We are no longer in the document. Stop working
+
           return;
         }
 
@@ -249,6 +262,7 @@ export class AbstractAction extends foreElementMixin(HTMLElement) {
         // We are no longer in the document. Stop working
         this.actionPerformed();
         resolveThisEvent();
+		this._clearOutermostHandler();
         return;
       }
     }
@@ -271,6 +285,7 @@ export class AbstractAction extends foreElementMixin(HTMLElement) {
 
     }
     resolveThisEvent();
+    this._clearOutermostHandler();
   }
 
   /**

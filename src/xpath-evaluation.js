@@ -12,6 +12,7 @@ import {
 } from 'fontoxpath';
 
 import {XPathUtil} from './xpath-util.js';
+import xpathInvalidator from './xpath-invalidator.js';
 
 const XFORMS_NAMESPACE_URI = 'http://www.w3.org/2002/xforms';
 
@@ -405,7 +406,7 @@ export function evaluateXPath(xpath, contextNode, formElement, variables = {}, o
     return fxEvaluateXPath(
         xpath,
         contextNode,
-        null,
+        xpathInvalidator.currentDomFacade,
         {...variablesInScope, ...variables},
         fxEvaluateXPath.ALL_RESULTS_TYPE,
         {

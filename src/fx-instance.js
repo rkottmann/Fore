@@ -1,5 +1,6 @@
 import { Fore } from './fore.js';
 import { evaluateXPathToFirstNode } from './xpath-evaluation.js';
+import xpathInvalidator from './xpath-invalidator.js';
 
 async function handleResponse(response) {
   const { status } = response;
@@ -170,7 +171,7 @@ export class FxInstance extends HTMLElement {
         newNode.appendChild(doc.createTextNode(p[1]));
         root.appendChild(newNode);
       }
-      this.instanceData = doc;
+		this.instanceData = doc;
       // this.instanceData.firstElementChild.setAttribute('id', this.id);
       // resolve('done');
     } else if (this.src) {
@@ -178,6 +179,7 @@ export class FxInstance extends HTMLElement {
     } else if (this.childNodes.length !== 0) {
       this._useInlineData();
     }
+	xpathInvalidator.observeInstance(this.instanceData);
   }
 
   createInstanceData() {

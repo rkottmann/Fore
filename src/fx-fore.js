@@ -7,6 +7,7 @@ import getInScopeContext from './getInScopeContext.js';
 import {XPathUtil} from './xpath-util.js';
 import {FxRepeatAttributes} from './ui/fx-repeat-attributes.js';
 
+import xpathInvalidator from './xpath-invalidator.js';
 /**
  * Main class for Fore.Outermost container element for each Fore application.
  *
@@ -426,6 +427,10 @@ export class FxFore extends HTMLElement {
                 }
             });
             this.toRefresh = [];
+			const additionalComponentsToRefresh = xpathInvalidator.getInvalidatedComponents();
+			additionalComponentsToRefresh.forEach(component => {
+				component.refresh(force);
+			});
             if (!needsRefresh) {
                 console.log('no dependants to refresh');
             }
