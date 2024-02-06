@@ -9,6 +9,7 @@ import {Fore} from '../fore.js';
 import {ModelItem} from "../modelitem.js";
 import {debounce} from "../events.js";
 import {FxModel} from "../fx-model.js";
+import {FxFore} from "../fx-fore.js";
 
 const WIDGETCLASS = 'widget';
 
@@ -38,6 +39,7 @@ export default class FxControl extends XfAbstractControl {
         super();
         this.inited = false;
         this.attachShadow({mode: 'open'});
+        this.urlLoaded = false;
     }
 
     static get properties() {
@@ -97,17 +99,14 @@ export default class FxControl extends XfAbstractControl {
             // ### prevent mousedown events on all control content that is not the widget or within the widget
             if (!Fore.isWidget(e.target) && !e.target?.classList.contains('fx-hint')) {
                 e.preventDefault();
-                // e.stopImmediatePropagation();
             }
             this.widget.focus();
         });
-
 
         const defaultValueProp = this.widget.hasAttribute('multiple') ? 'selectedOptions' : 'value';
         this.valueProp = this.hasAttribute('value-prop') ?
             this.getAttribute('value-prop') :
             defaultValueProp;
-
 
         // console.log('widget ', this.widget);
         let listenOn = this.widget // default: usually listening on widget
@@ -119,7 +118,6 @@ export default class FxControl extends XfAbstractControl {
                 listenOn = target;
             }
         }
-
 
         this.addEventListener('keyup', () => {
             FxModel.dataChanged = true;
@@ -156,30 +154,8 @@ export default class FxControl extends XfAbstractControl {
         }
 
         this.addEventListener('return', e => {
-            // console.log('catched return action on ', this);
-            // console.log('return detail', e.detail);
-
-            // console.log('return triggered on ', this);
-            // console.log('this.ref', this.ref);
-            // console.log('current outer instance', this.getInstance());
-
-            /*
-                  console.log(
-                    '???? why ???? current nodeset should point to the node of the outer control',
-                    e.currentTarget.nodeset,
-                  );
-                  console.log(
-                    '???? why ???? current nodeset should point to the node of the outer control',
-                    this.nodeset,
-                  );
-            */
             const newNodes = e.detail.nodeset;
-            // console.log('new nodeset', newNodes);
-            // console.log('currentTarget', e.currentTarget);
-            // console.log('target', e.target);
-
             e.stopPropagation();
-
             this._replaceNode(newNodes);
         });
 
@@ -378,10 +354,12 @@ export default class FxControl extends XfAbstractControl {
         if (this.url && !this.loaded && this.modelItem.relevant) {
             // ### evaluate initial data if necessary
 
+/*
             if (this.initial) {
                 this.initialNode = evaluateXPathToFirstNode(this.initial, this.nodeset, this);
                 // console.log('initialNodes', this.initialNode);
             }
+*/
 
             // ### load the markup from Url
             await this._loadForeFromUrl();
@@ -416,10 +394,14 @@ export default class FxControl extends XfAbstractControl {
      * @private
      */
     async _loadForeFromUrl() {
+        console.log('_loadForeFromUrl',this.url)
+        // if(FxFore.loadedUrls.includes(this.url)) return;
         console.info(
-            `%cFore is processing URL ${this.url}`,
+            `%cControl ref="${this.ref}" is loading ${this.url}`,
             "background:#64b5f6; color:white; padding:0.5rem; display:inline-block; white-space: nowrap; border-radius:0.3rem;width:100%;",
         );
+
+        // FxFore.loadedUrls.push(this.url);
         try {
             const response = await fetch(this.url, {
                 method: 'GET',
@@ -428,72 +410,84 @@ export default class FxControl extends XfAbstractControl {
                 headers: {
                     'Content-Type': 'text/html',
                 },
-            });
+            }).then(response => {
+                const responseContentType = response.headers.get('content-type').toLowerCase();
+                console.log('********** responseContentType *********', responseContentType);
+                if (responseContentType.startsWith('text/html')) {
+                    // const htmlResponse = response.text();
+                    // return new DOMParser().parseFromString(htmlResponse, 'text/html');
+                    // return response.text();
+                    return response.text().then(result =>
+                        // console.log('xml ********', result);
+                        new DOMParser().parseFromString(result, 'text/html'),
+                    );
+                }
+                return 'done';
+            }).then(data =>{
 
-            const responseContentType = response.headers.get('content-type').toLowerCase();
-            // console.log('********** responseContentType *********', responseContentType);
-            let data;
-            if (responseContentType.startsWith('text/html')) {
-                data = await response.text().then(result =>
-                    // console.log('xml ********', result);
-                    new DOMParser().parseFromString(result, 'text/html'),
+                // const theFore = fxEvaluateXPathToFirstNode('//fx-fore', data.firstElementChild);
+                const theFore = data.querySelector('fx-fore');
+                const imported = document.importNode(theFore, true);
+
+                imported.classList.add('widget'); // is the new widget
+                imported.addEventListener(
+                    'model-construct-done',
+                    e => {
+                        // console.log(`#### model-construct-done on ${this.getOwnerForm().id} ###`);
+                        const defaultInst = imported.querySelector('fx-instance');
+                        if (this.initial) {
+                            const doc = new DOMParser().parseFromString('<data></data>', 'application/xml');
+                            // Note: Clone the input to prevent the inner fore from editing the outer node
+                            // Also update the `initialNode` to make sure we have an up-to-date version
+                            this.initialNode = evaluateXPathToFirstNode(this.initial, this.nodeset, this);
+
+                            doc.firstElementChild.appendChild(this.initialNode.cloneNode(true));
+                            defaultInst.setInstanceData(doc);
+                        }
+                        imported.model = imported.querySelector('fx-model');
+                        imported.model.updateModel();
+
+                        imported.refresh(true);
+                        // Fore.dispatch(e.target, 'loaded', {url: this.url})
+
+                    },
+                    {once: true},
                 );
-            } else {
-                data = 'done';
-            }
-            // const theFore = fxEvaluateXPathToFirstNode('//fx-fore', data.firstElementChild);
-            const theFore = data.querySelector('fx-fore');
-            const imported = document.importNode(theFore, true);
 
-            imported.classList.add('widget'); // is the new widget
-            imported.addEventListener(
-                'model-construct-done',
-                e => {
-                    const defaultInst = imported.querySelector('fx-instance');
-                    if (this.initial) {
-                        const doc = new DOMParser().parseFromString('<data></data>', 'application/xml');
-                        // Note: Clone the input to prevent the inner fore from editing the outer node
-						// Also update the `initialNode` to make sure we have an up-to-date version
-						this.initialNode = evaluateXPathToFirstNode(this.initial, this.nodeset, this);
-
-                        doc.firstElementChild.appendChild(this.initialNode.cloneNode(true));
-                        defaultInst.setInstanceData(doc);
-                    }
-                    imported.getModel().updateModel();
-                    imported.refresh();
-                },
-                {once: true},
-            );
-
-            const dummy = this.querySelector('input');
-            /*
-            todo: the mechanism to import constructed stylesheets as in fore-component is still missing here.
-            There no way yet to specify CSS for a embedded fx-fore in shadowDOM.
-             */
-            if (this.hasAttribute('shadow')) {
-                dummy.parentNode.removeChild(dummy);
-                this.shadowRoot.appendChild(imported);
-            } else if (!this.loaded) {
-                dummy.replaceWith(imported);
-            }
+                const dummy = this.querySelector('input');
+                /*
+                todo: the mechanism to import constructed stylesheets as in fore-component is still missing here.
+                There no way yet to specify CSS for a embedded fx-fore in shadowDOM.
+                 */
+                if (this.hasAttribute('shadow')) {
+                    dummy.parentNode.removeChild(dummy);
+                    this.shadowRoot.appendChild(imported);
+                } else if (!this.loaded) {
+                    dummy.replaceWith(imported);
+                }
 
 
-            if (!theFore) {
-                this.dispatchEvent(
-                    new CustomEvent('error', {
+                if (!theFore) {
+                    Fore.dispatch('error', {
                         detail: {
                             message: `Fore element not found in '${this.src}'. Maybe wrapped within 'template' element?`,
-                        },
-                    }),
-                );
-            }
-            this.dispatchEvent(new CustomEvent('loaded', {detail: {fore: theFore}}));
+                        }
+                    });
+                }
+
+                // if(!FxFore.loadedUrls.includes(this.url)){
+                Fore.dispatch('loaded', {detail: {fore: theFore}});
+                // }
+
+            })
+
+
         } catch (error) {
             // console.log('error', error);
             Fore.dispatch(this, 'error', {
                 origin: this,
                 message: `control couldn't be loaded from url '${this.url}'`,
-                expr:xpath,
+                expr:this.url,
                 level:'Error'
             });
 

@@ -51,6 +51,43 @@ export class XPathUtil {
         return start;
     }
 
+    /*
+        static getClosest(querySelector, start) {
+            while (start && !start.matches || !start.matches(querySelector)) {
+                if(start.nodeType === Node.DOCUMENT_NODE){
+                    return null;
+                }
+                if (start.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+                    // We are passing a shadow root boundary
+                    start = start.host;
+                    continue;
+                }
+                if(start.nodeType === Node.ELEMENT_NODE && start.parentNode){
+                    start = start.parentNode;
+                    continue;
+                }
+                if (start.nodeType === Node.ATTRIBUTE_NODE) {
+                    // We are passing an attribute
+                    start = start.ownerElement;
+                    continue;
+                }
+                if (start.nodeType === Node.TEXT_NODE) {
+                    start = start.parentNode;
+                }
+                // if (start.matches('fx-fore')) {
+                if (start.nodeName === 'FX-FORE') {
+                    // Subform reached. Bail out
+                    return null;
+                }
+                // start = start.parentNode;
+                if (!start) {
+                    return null;
+                }
+            }
+            return start;
+        }
+    */
+
     /**
      * returns next bound element upwards in tree
      * @param start where to start the search

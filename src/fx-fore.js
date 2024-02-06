@@ -26,6 +26,7 @@ import {FxRepeatAttributes} from './ui/fx-repeat-attributes.js';
  */
 export class FxFore extends HTMLElement {
     static outermostHandler = null;
+    static loadedUrls = [];
 
     static get properties() {
         return {
@@ -279,10 +280,10 @@ export class FxFore extends HTMLElement {
 				return;
             }
             if (!modelElement.inited) {
-                console.info(
-                    `%cFore is processing URL ${window.location.href}`,
-                    "background:#64b5f6; color:white; padding:1rem; display:inline-block; white-space: nowrap; border-radius:0.3rem;width:100%;",
-                );
+                    console.info(
+                        `%cFore is processing fx-fore#${this.id}`,
+                        "background:#64b5f6; color:white; padding:1rem; display:inline-block; white-space: nowrap; border-radius:0.3rem;width:100%;",
+                    );
 
                 await modelElement.modelConstruct();
 				this._handleModelConstructDone();
@@ -493,7 +494,7 @@ export class FxFore extends HTMLElement {
 			return;
 		}
         this.isRefreshing = true;
-        console.log('### <<<<< refresh() >>>>>');
+        console.log(`### <<<<< refresh() ${this.id} >>>>>`);
 
         // refresh () {
         // ### refresh Fore UI elements
@@ -567,10 +568,10 @@ export class FxFore extends HTMLElement {
 
 		// this.isRefreshing = true;
 		// this.parentNode.closest('fx-fore')?.refresh(false, changedPaths);
-		this.parentNode.closest('fx-fore')?.refresh(false);
+            this.parentNode.closest('fx-fore')?.refresh(false);
 		for (const subFore of this.querySelectorAll('fx-fore')) {
 			// subFore.refresh(false, changedPaths);
-			subFore.refresh(false);
+			subFore.refresh(true);
 		}
 		this.isRefreshing = false;
     }
@@ -770,15 +771,21 @@ export class FxFore extends HTMLElement {
         const model = this.querySelector('fx-model');
 
         // ##### lazy creation should NOT take place if there's a parent Fore using shared instances
-        const parentFore = this.parentNode.closest('fx-fore');
-        if(parentFore){
-            const shared = parentFore.getModel().instances.filter(shared => shared.hasAttribute('shared'));
-            if(shared.length !==0) return;
-        }
+        const parentFore = this.parentNode ? this.parentNode.closest('fx-fore'):null;
+        if(parentFore) return;
+
+        /*
+                if(parentFore){
+                    const shared = parentFore.getModel().instances.filter(shared => shared.hasAttribute('shared'));
+                    if(shared.length !==0) return;
+                }
+        */
 
         // still need to catch just in case...
         try{
             if (model.instances.length === 0) {
+                console.log('_lazyCreate', this.id);
+                console.log('_lazyCreate', this.parentNode);
                 // console.log('### lazy creation of instance');
                 const generatedInstance = document.createElement('fx-instance');
                 model.appendChild(generatedInstance);

@@ -86,7 +86,7 @@
         The first nested Fore is attached to the lightDOM and therefore is styled by outer CSS. The second
         attached the nested Fore to the shadowDOM and is not reachable from the outside with global CSS.
     </p>
-    <fx-fore>
+    <fx-fore id="outer">
         <fx-message event="ready">outer fore ready</fx-message>
 
         <fx-model>
@@ -118,11 +118,18 @@
                         url="email.html"
                         initial=".">
                 <label>From</label>
+                <fx-message event="loaded" level="sticky">email 1 loaded</fx-message>
             </fx-control>
+<!--
             <fx-control id="to" ref="to/email"
                         url="email.html"
                         initial="." shadow>
+-->
+            <fx-control id="to" ref="to/email"
+                        url="email.html"
+                        initial=".">
                 <label>To</label>
+                <fx-message event="loaded" level="sticky">email 2 loaded</fx-message>
             </fx-control>
             <fx-control ref="subject">
                 <label>Subject</label>
@@ -132,11 +139,14 @@
                 <textarea class="widget" rows="10"></textarea>
             </fx-control>
             <fx-control ref="attachments"
-                        url="attachments.html" >
+                        url="attachments.html"
+                        >
                 <label>Attachments</label>
+                <fx-message event="loaded" level="sticky">attachments loaded</fx-message>
             </fx-control>
         </fx-group>
-        <fx-inspector open></fx-inspector>
+<!--        <fx-inspector open></fx-inspector>-->
+<!--        <fx-devtools></fx-devtools>-->
     </fx-fore>
 
 

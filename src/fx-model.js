@@ -459,9 +459,16 @@ export class FxModel extends HTMLElement {
         // console.log('instances ', this.instances);
         // console.log('instances array ',Array.from(this.instances));
 
-        const instArray = Array.from(this.instances);
-        let found = instArray.find(inst => inst.id === id);
+        let found;
+        if(id === 'default'){
+            found = this.getDefaultInstance();
+        }
         if(!found) {
+            const instArray = Array.from(this.instances);
+            found = instArray.find(inst => inst.id === id);
+
+        }
+        if(!found){
             const parentFore = this.fore.parentNode.closest('fx-fore');
             if (parentFore) {
                 console.log('shared instances from parent', this.parentNode.id);
@@ -469,6 +476,7 @@ export class FxModel extends HTMLElement {
                 const shared = parentInstances.filter(shared => shared.hasAttribute('shared'));
                 found = shared.find(found => found.id === id);
             }
+
         }
         if(!found){
             // return this.getDefaultInstance(); // if id is not found always defaults to first in doc order

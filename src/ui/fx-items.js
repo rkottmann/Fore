@@ -124,12 +124,16 @@ export class FxItems extends FxControl {
     // ### xml / JSON
     if(node.nodeType){
       const lblEvaluated = evaluateXPathToString(lblExpr, node, this);
+      // const lblEvaluated = this.getOwnerForm().evaluateTemplateExpression(lblExpr, this);
       label.textContent = lblEvaluated;
     } else{
       const labelExpr = Fore.getExpression(lblExpr);
       label.textContent = node[labelExpr];
     }
     label.setAttribute('for', id);
+
+    // this.getOwnerForm().evaluateTemplateExpression(this.textContent, newEntry);
+
 
     // ### handle the 'value'
     // getting element which has 'value' attr

@@ -976,6 +976,7 @@ const instance = (dynamicContext, string) => {
         {namespaceResolver: xhtmlNamespaceResolver},
     );
 
+    // console.log('%%%%%%%% get instance',string, formElement.id);
     let lookup = null;
     if(string === null || string === 'default'){
         lookup = formElement.getModel().getDefaultInstance();
