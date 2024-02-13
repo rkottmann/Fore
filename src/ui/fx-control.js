@@ -442,7 +442,7 @@ export default class FxControl extends XfAbstractControl {
                             this.initialNode = evaluateXPathToFirstNode(this.initial, this.nodeset, this);
 
                             doc.firstElementChild.appendChild(this.initialNode.cloneNode(true));
-                            defaultInst.setInstanceData(doc);
+                            defaultInst.instanceData = doc;
                         }
                         imported.model = imported.querySelector('fx-model');
                         imported.model.updateModel();

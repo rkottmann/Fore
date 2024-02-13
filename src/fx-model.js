@@ -443,7 +443,7 @@ export class FxModel extends HTMLElement {
      * @returns {Element} the
      */
     getDefaultContext() {
-        return this.instances[0].getDefaultContext();
+        return this.getDefaultInstance().getDefaultContext();
     }
 
     getDefaultInstance() {
@@ -451,7 +451,7 @@ export class FxModel extends HTMLElement {
     }
 
     getDefaultInstanceData() {
-       return this.instances[0].getInstanceData();
+		return this.getDefaultInstance().getInstanceData();
     }
 
     getInstance(id) {
@@ -466,6 +466,9 @@ export class FxModel extends HTMLElement {
         if(!found) {
             const instArray = Array.from(this.instances);
             found = instArray.find(inst => inst.id === id);
+            const parentFore = this.fore.parentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE
+                  ? this.fore.parentNode.host.closest('fx-fore')
+                  : this.fore.parentNode.closest('fx-fore');
 
         }
         if(!found){
@@ -478,15 +481,19 @@ export class FxModel extends HTMLElement {
             }
 
         }
-        if(!found){
-            // return this.getDefaultInstance(); // if id is not found always defaults to first in doc order
-            Fore.dispatch(this, 'error', {
-                origin: this,
-                message: `Instance '${id}' does not exist`,
-                level:'Error'
-            });
-        }
-        return found;
+        if(found){
+			return found;
+		}
+		if (id === 'default') {
+			return this.getDefaultInstance(); // if id is not found always defaults to first in doc order
+		}
+
+        Fore.dispatch(this, 'error', {
+            origin: this,
+            message: `Instance '${id}' does not exist`,
+            level:'Error'
+        });
+		return null;
     }
 
     evalBinding(bindingExpr) {

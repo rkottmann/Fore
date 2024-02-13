@@ -113,6 +113,17 @@ export class FxSubmission extends foreElementMixin(HTMLElement) {
      * @private
      */
     async _serializeAndSend() {
+		// Sanity check: does the media type match the content type for the replace?
+		const targetInstance = this._getTargetInstance();
+		if (!this.mediatype.includes(targetInstance.type)) {
+		    Fore.dispatch(this, 'error', {
+                origin: this,
+                message: `Response ContentType for submission ${this.id} does not match the type of instance to be replaced`,
+                expr:XPathUtil.getDocPath(this),
+                level:'Error'
+			});
+		}
+
         const url = this._getProperty('url');
         const resolvedUrl = this.evaluateAttributeTemplateExpression(url,this);
         console.log('resolvedUrl',resolvedUrl);
@@ -203,7 +214,10 @@ export class FxSubmission extends foreElementMixin(HTMLElement) {
                 method: this.method,
                 credentials: this.credentials,
                 mode:'cors',
-                headers,
+                headers: {
+					...headers,
+					'Content-Type': this.mediatype
+				},
                 body: serialized,
             });
 
